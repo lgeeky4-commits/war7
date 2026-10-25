@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#09131a"><title>WARFRONT FIVE — Tactical Command Interface</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div id="gameShell" class="game-shell">
+  <div class="top-accent"></div>
+  <header class="topbar">
+    <div class="brand"><span class="brand-symbol">W<span>5</span></span><span class="brand-name">WARFRONT <b>FIVE</b><small>TACTICAL STRATEGY / FICTIONAL GAME</small></span></div>
+    <div class="team-meter"><span class="team-dot blue"></span><span>BLUE</span><b id="blueCount">0</b><span class="team-meter-divider"></span><span class="team-dot red"></span><span>RED</span><b id="redCount">0</b></div>
+    <div class="top-actions"><span id="status" class="connection-status"><i></i>OFFLINE</span><span id="clock" class="clock"></span><button id="filterShortcut" class="header-button" type="button">THEMES</button></div>
+  </header>
+  <div class="notice-line"><span>SIMULATION MODE</span> Images are user-provided reference artwork. Vehicles and missile effects are game-only; not live tracking, targeting data, or real capabilities.</div>
+  <main class="game-layout">
+    <aside class="operations-panel">
+      <div class="section-head"><span>01 / OPERATIONS</span><strong id="count">0 / 5</strong></div>
+      <div class="panel-label">CONNECTED PLAYERS</div><div id="players" class="players"></div>
+      <div class="panel-label">CURRENT LOADOUT</div><div id="activeSelection" class="active-selection"><div class="selection-type">MISSILE / GAME ITEM</div><strong>R-17 Elbrus</strong><small>SELECT A MAP LOCATION TO PLAY AN EFFECT</small></div>
+      <div class="panel-label">MAP ACTIONS</div>
+      <button id="strikeBtn" class="action-primary" type="button">PLACE SELECTED GAME ITEM</button>
+      <button id="cancelBtn" class="action-secondary" type="button">CANCEL PLACEMENT</button>
+      <div class="base-operations" id="baseOperations"><div class="panel-label">USA BASE / WORLD SIM</div>
+        <div class="base-caption" id="baseCoords">TEAM BASE: LOADING</div>
+        <div class="base-buttons"><button id="baseHomeBtn" type="button">GO TO BASE</button><button id="basePlaceBtn" type="button">MOVE BASE</button></div>
+        <label class="sim-toggle"><input id="airToggle" type="checkbox" checked><span>SIMULATED AIR TRAFFIC</span><b id="airCount">00</b></label>
+        <label class="sim-toggle car-system"><input id="carsToggle" type="checkbox"><span>SIMULATED ROAD CARS</span><b id="carCount">00</b></label>
+        <label class="density-line car-system" for="trafficDensity">ROAD DOTS <input id="trafficDensity" type="range" min="20" max="200" step="10" value="100"><output id="densityValue">100</output></label>
+        <div class="traffic-road-actions car-system"><button id="retryRoadsBtn" type="button">LOAD MAP ROADS</button><button id="demoRoadsBtn" type="button">DEMO ROADS</button></div>
+        <div class="traffic-note car-system" id="roadStatus">ROAD DATA: LOADING</div>
+        <div class="traffic-note car-system" id="jamStatus">TRAFFIC STATUS: READY</div>
+      </div>
+      <div class="hint" id="modeHelp">Choose an item on the right, then use PLACE to activate map placement.</div>
+      <div class="warcam-section"><div class="section-head"><span>02 / WAR CAM</span><span id="videoLabel">OFFLINE</span></div><div class="video-stage" id="videoStage"><video id="remoteVideo" autoplay playsinline></video><video id="localVideo" autoplay playsinline muted></video><div class="warcam-grain"></div><div class="cam-reticle"></div><div class="camera-label">SIMULATED VIEW HUD</div></div><div class="camera-footer">Camera sharing requires permission and an accepted call.</div></div>
+    </aside>
+    <section class="central-panel">
+      <div class="map-head"><div><span class="section-index">03 / INTERACTIVE MAP</span><h1>BATTLESPACE <span>VIEW</span></h1></div><div class="map-meta"><span id="coords">LAT -- / LON --</span><span>OPENSTREETMAP / ONLINE</span></div></div>
+      <div class="map-frame"><div id="map" aria-label="Map for fictional strategy game"></div><div class="map-guides" aria-hidden="true"><div class="map-crosshair"></div><div class="map-label">LIVE WORLD BASEMAP • VIRTUAL OVERLAYS</div></div><div class="map-sim-hud"><strong>SIMULATED WORLD</strong><span id="airHud">AIR 06 / FICTIONAL</span><span id="roadHud" class="car-system">ROAD 09 / FICTIONAL</span></div><div class="map-toast" id="mapToast" hidden>SELECT A LOCATION</div></div>
+      <div class="map-footer"><span><i class="signal-dot"></i> FIVE-PLAYER ROOM</span><span id="selectedLabel">R-17 ELBRUS / SIMULATION</span></div>
+      <div class="map-vision-controls" id="mapVisionPanel">
+        <div class="map-vision-row"><span class="vision-caption">MAP TYPE</span><div class="vision-buttons" role="group" aria-label="Map imagery type"><button type="button" class="map-style active" data-mapstyle="terrain">TERRAIN</button><button type="button" class="map-style" data-mapstyle="streets">STREETS</button><button type="button" class="map-style" data-mapstyle="satellite">SATELLITE</button></div><div class="vision-shortcuts"><button type="button" id="quickBaseHome">MY BASE</button><button type="button" id="quickBaseMove">MOVE BASE</button></div></div>
+        <div class="map-vision-row"><span class="vision-caption">VISUAL MODE</span><div class="vision-buttons" role="group" aria-label="Map visual filter"><button type="button" class="vision-mode active" data-vision="normal">NORMAL</button><button type="button" class="vision-mode" data-vision="rgb">RGB</button><button type="button" class="vision-mode" data-vision="heat">HEAT</button><button type="button" class="vision-mode" data-vision="night">NIGHT VISION</button></div></div>
+        <div class="rgb-sliders" id="rgbSliders" hidden><label>RED <input id="redChannel" type="range" min="0" max="200" value="100"><output id="redChannelValue">100%</output></label><label>GREEN <input id="greenChannel" type="range" min="0" max="200" value="100"><output id="greenChannelValue">100%</output></label><label>BLUE <input id="blueChannel" type="range" min="0" max="200" value="100"><output id="blueChannelValue">100%</output></label></div>
+        <div class="sim-disclaimer">TERRAIN = MAP IMAGERY. HEAT/NIGHT = STYLED FILTERS. PLANES/CARS/PLATES/LIGHTS ARE FICTIONAL.</div>
+      </div>
+      <div class="communications"><div class="section-head"><span>04 / TEAM COMMUNICATIONS</span><span>VOICE & VIDEO</span></div><div class="communication-body"><div class="chat-area"><div class="chat-title">TEAM CHAT <span id="chatTeam">--</span></div><div id="chat" class="chat-history" role="log" aria-live="polite"></div><form id="chatForm" class="chat-composer"><input id="message" maxlength="350" placeholder="Message your team" autocomplete="off"><button type="submit">SEND</button></form></div><div class="voice-actions"><div class="chat-title">PRIVATE COMMS</div><select id="target" aria-label="Call recipient"><option value="">Select connected player</option></select><div class="comms-buttons"><button id="voiceBtn" type="button">VOICE</button><button id="videoBtn" type="button">VIDEO</button><button id="camBtn" type="button">SHARE CAM</button><button id="hangBtn" class="danger" type="button">END CALL</button></div><p>Requires permission. The other player must accept.</p></div></div></div>
+    </section>
+    <aside class="arsenal-panel" id="arsenalPanel">
+      <div class="section-head arsenal-heading"><span>05 / UNIT SELECTION</span><span class="selection-status">GAME LOADOUT</span></div>
+      <div class="arsenal-main"><nav class="category-tabs" id="categoryTabs" aria-label="Game unit categories">
+        <button class="category-tab" type="button" data-category="ATV">ATV</button>
+        <button class="category-tab" type="button" data-category="UAV">UAV</button>
+        <button class="category-tab" type="button" data-category="JETS">JETS</button>
+        <button class="category-tab" type="button" data-category="TANKS">TANKS</button>
+        <button class="category-tab active" type="button" data-category="MISSILES">MISSILES</button>
+        <button class="category-tab" type="button" data-category="OTHER">OTHER<br>VEHICLES</button>
+      </nav><div class="catalog"><div class="catalog-heading"><div><b id="catalogTitle">MISSILES</b><small>CHOOSE A SIMULATED UNIT</small></div><span id="catalogCount">07</span></div><div id="catalogGrid" class="catalog-grid"></div><div class="catalog-note">Illustrative photographs. Names are game catalog references, not verified photo identifications.</div></div></div>
+      <section class="filters-panel" id="filtersPanel"><div class="section-head"><span>06 / COLOR & SIGNAL FX</span><button id="resetFilters" type="button">RESET</button></div>
+        <label class="scope-select-label" for="filterScope">FILTER TARGET</label><select id="filterScope"><option value="global">FULL GAME INTERFACE</option><option value="camera">WAR CAM ONLY</option></select>
+        <div class="filter-rows">
+          <label for="grit"><span>GRIT</span><input id="grit" type="range" min="0" max="100" value="8"><output id="gritValue">8</output></label>
+          <label for="gritSize"><span>GRIT SIZE</span><input id="gritSize" type="range" min="1" max="10" value="3"><output id="gritSizeValue">03</output></label>
+          <label for="hue"><span>HUE</span><input id="hue" type="range" min="-180" max="180" value="0"><output id="hueValue">0°</output></label>
+          <label for="saturation"><span>SATURATION</span><input id="saturation" type="range" min="0" max="200" value="100"><output id="saturationValue">100%</output></label>
+          <label for="brightness"><span>BRIGHTNESS</span><input id="brightness" type="range" min="45" max="155" value="100"><output id="brightnessValue">100%</output></label>
+          <label for="glitch"><span>GLITCH</span><input id="glitch" type="range" min="0" max="100" value="0"><output id="glitchValue">0</output></label>
+        </div>
+        <div class="theme-builder">
+          <div class="theme-subhead">COLOR THEMES</div>
+          <div class="preset-buttons" id="themeButtons">
+            <button type="button" class="preset-btn active" data-theme="steel">STEEL ICE</button>
+            <button type="button" class="preset-btn" data-theme="crimson">CRIMSON</button>
+            <button type="button" class="preset-btn" data-theme="toxic">TOXIC</button>
+            <button type="button" class="preset-btn" data-theme="amber">AMBER</button>
+            <button type="button" class="preset-btn" data-theme="ghost">GHOST</button>
+            <button type="button" class="preset-btn" data-theme="violet">VIOLET</button>
+          </div>
+          <div class="theme-subhead">LAYOUT MODE</div>
+          <div class="preset-buttons layout-buttons" id="layoutButtons">
+            <button type="button" class="preset-btn active" data-layout="standard">STANDARD</button>
+            <button type="button" class="preset-btn" data-layout="command">COMMAND</button>
+            <button type="button" class="preset-btn" data-layout="focus">MAP FOCUS</button>
+            <button type="button" class="preset-btn" data-layout="compact">COMPACT</button>
+          </div>
+        </div>
+        <div class="filters-foot">FILTERS, THEMES, AND LAYOUTS ARE LOCAL TO YOUR SCREEN • SAVED IN THIS BROWSER</div>
+      </section>
+    </aside>
+  </main>
+  <svg class="hidden-svg-defs" width="0" height="0" aria-hidden="true"><defs><filter id="warfrontRgbFilter" color-interpolation-filters="sRGB"><feColorMatrix id="warfrontRgbMatrix" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1 0"/></filter></defs></svg>
+  <div id="globalGrain" class="global-grain" aria-hidden="true"></div><div id="globalGlitch" class="global-glitch" aria-hidden="true"></div>
+</div>
+<div id="join" class="overlay"><section class="join-modal"><div class="eyebrow">SIMULATION CLIENT / MULTIPLAYER</div><div class="join-symbol">W<span>5</span></div><h2>WARFRONT <em>FIVE</em></h2><p>Five-player fictional strategy game with a real-world reference map, team chat, live camera calls, and selectable game units.</p><label for="name">CALLSIGN</label><input id="name" placeholder="Enter player name" maxlength="22" autocomplete="nickname"><label for="team">CHOOSE TEAM</label><select id="team"><option value="BLUE">BLUE TEAM</option><option value="RED">RED TEAM</option></select><button id="joinBtn" type="button">ENTER SESSION</button><div class="join-error" id="joinError" role="alert"></div><small>Multiplayer server required. All simulated strikes and deployments are purely visual game events.</small></section></div>
+<div id="incoming" class="overlay" hidden><section class="join-modal"><div class="eyebrow">COMMUNICATION REQUEST</div><h2>INCOMING CALL</h2><p id="caller"></p><div class="incoming-buttons"><button id="accept" type="button">ACCEPT</button><button id="decline" type="button">DECLINE</button></div></section></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script><script src="/app.js"></script>
+<script src="/map-ops.js"></script>
+</body></html>
